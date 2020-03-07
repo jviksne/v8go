@@ -11,9 +11,6 @@ package v8
 // BUG(aroman) Unhandled promise rejections are silently dropped
 // (see https://github.com/augustoroman/v8/issues/21)
 
-// augustoroman/v8 - original - # cgo LDFLAGS: -pthread -L${SRCDIR}/libv8 -lv8_base -lv8_init -lv8_initializers -lv8_libbase -lv8_libplatform -lv8_libsampler -lv8_nosnapshot
-// https://stackoverflow.com/questions/35856693/can-i-import-a-golang-package-based-on-the-os-im-building-for
-
 // #include <stdlib.h>
 // #include <string.h>
 // #include "v8_c_bridge.h"

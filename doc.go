@@ -1,4 +1,4 @@
-// Package v8 provides a Go API for the the V8 javascript engine.
+// package v8 provides a Go API for the the V8 javascript engine.
 //
 // This allows running javascript within a go executable.  The bindings
 // have been tested with v8 builds between 5.1.281.16 through 6.7.77.

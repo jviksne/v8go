@@ -1,4 +1,4 @@
-// Package v8console provides a simple console implementation to allow JS to
+// package v8console provides a simple console implementation to allow JS to
 // log messages.
 //
 // It supports the console.log, console.info, console.warn, and console.error
