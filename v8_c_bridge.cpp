@@ -10,6 +10,7 @@
 #include "pch.h"
 #include "framework.h"
 #include "v8_c_bridge.h"
+#include "resource.h"
 
 #include "libplatform/libplatform.h"
 #include "v8.h"
@@ -20,6 +21,7 @@
 #include <sstream>
 #include <stdio.h>
 #include <iostream>
+#include <mutex>
 
 #define ISOLATE_SCOPE(iso) \
   v8::Isolate* isolate = (iso);                                                               \
@@ -171,32 +173,51 @@ std::string report_exception(v8::Isolate* isolate, v8::Local<v8::Context> ctx, v
 	return ss.str();
 }
 
+std::unique_ptr<v8::Platform> platform_ = nullptr; // Platform has to be global in order for many global variables not to get freed
+
+char* snapshot_bytes_ = nullptr; // the default snapshot stored in resources
+DWORD snapshot_size_ = -1; // -1 means that the default snapshot has not been loaded from resources
+std::mutex mtx;
+
+void log_warning(const char* msg) {
+	std::cout << "Warning: ";
+	std::cout << msg; // TODO: implement some other kind of logging mechanism
+	std::cout << "\n";
+}
+
 extern "C" {
 
 	V8CBRIDGE_API GoCallbackHandlerPtr go_callback_handler = nullptr;
 
 	V8CBRIDGE_API Version version = { V8_MAJOR_VERSION, V8_MINOR_VERSION, V8_BUILD_NUMBER, V8_PATCH_LEVEL };
 
-	V8CBRIDGE_API void v8_Init(GoCallbackHandlerPtr callback_handler) {
+	V8CBRIDGE_API void v8_Init(GoCallbackHandlerPtr callback_handler, const char* icu_data_file) {
+
+		mtx.lock();
+
+		//init only once
+		if (platform_ != nullptr)
+			return;
 
 		//const char* path
 		//v8::V8::InitializeICUDefaultLocation(path);
 		//v8::V8::InitializeExternalStartupData(path);
 
-		if (!v8::V8::InitializeICU()) {
-			std::cout << "Warning: V8 ICU not initialized - not bundled with library.\n";
-		}
-
-		std::unique_ptr<v8::Platform> platform = v8::platform::NewDefaultPlatform(
+		// Platform has to be global
+		platform_ = v8::platform::NewDefaultPlatform(
 			0, // thread_pool_size
 			v8::platform::IdleTaskSupport::kDisabled,
-			v8::platform::InProcessStackDumping::kDisabled);
-		v8::V8::InitializePlatform(platform.get());
+			v8::platform::InProcessStackDumping::kEnabled);
+		v8::V8::InitializePlatform(platform_.get());
 		v8::V8::Initialize();
+
+		if (!v8::V8::InitializeICU(icu_data_file)) {
+			log_warning("V8 ICU not initialized");
+		}
 
 		go_callback_handler = callback_handler;
 
-		return;
+		mtx.unlock();
 	}
 
 	V8CBRIDGE_API void v8_Free(void* ptr) {
@@ -204,35 +225,77 @@ extern "C" {
 	}
 
 	/*
-	TODO: probably to be ported to use v8::SnapshotCreator
+	TODO: probably to be ported to use v8::SnapshotCreator, though possibly snapshots are to be created via a command line utility mksnapshot.
 	V8CBRIDGE_API StartupData v8_CreateSnapshotDataBlob(const char* js) {
 		v8::StartupData data = v8::V8::CreateSnapshotDataBlob(js);
 		return StartupData{ data.data, data.raw_size };
 	}
 	*/
 
-	V8CBRIDGE_API IsolatePtr v8_Isolate_New(StartupData startup_data) {
-		std::cout << "Hello from v8_Isolate_New\n";
+	
+	V8CBRIDGE_API IsolatePtr v8_Isolate_New(StartupData* data) {
+
 		v8::Isolate::CreateParams create_params;
-		std::cout << "v8_Isolate_New 2\n";
-		create_params.array_buffer_allocator = allocator;
-		//create_params.array_buffer_allocator = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
-		std::cout << "v8_Isolate_New 3\n";
-		if (startup_data.len > 0 && startup_data.ptr != nullptr) {
-			std::cout << "v8_Isolate_New 4\n";
-			v8::StartupData* data = new v8::StartupData;
-			data->data = startup_data.ptr;
-			data->raw_size = startup_data.len;
-			create_params.snapshot_blob = data;
+		create_params.array_buffer_allocator =
+			v8::ArrayBuffer::Allocator::NewDefaultAllocator();
+
+		// if snapshot passed use that
+		if (data != nullptr) {
+			v8::StartupData* startup_data = new v8::StartupData;
+			startup_data->data = data->ptr;
+			startup_data->raw_size = data->len;
+			create_params.snapshot_blob = startup_data;
 		}
-		std::cout << "v8_Isolate_New 5 with outPtr\n";
-		v8::Isolate* x = v8::Isolate::New(create_params);
-		std::cout << "v8_Isolate_New x is init\n";
-		IsolatePtr outPtr = static_cast<IsolatePtr>(x);
-		std::cout << "v8_Isolate_New outPtr is init\n";
-		std::cout << outPtr;
-		std::cout << "returning\n";
-		return outPtr;
+		else { // use snapshot from resources
+
+			mtx.lock();
+
+			// if snapshot has not been loaded in memory yet
+			if (snapshot_size_ < 0) {
+
+				snapshot_size_ = 0; // do not try to load it again
+
+				HMODULE hModule = GetModuleHandle(L"V8CBRIDGE.dll");
+				HRSRC hResInfo = FindResource(hModule, MAKEINTRESOURCE(IDR_SNAPSHOT1), L"snapshot"); // obtain handle of the resource
+				if (hResInfo != 0) {
+					HGLOBAL hResData = LoadResource(hModule, hResInfo); // Load the resource
+					snapshot_size_ = SizeofResource(hModule, hResInfo);
+					if (hResData != 0) {
+						LPVOID lpAddress = LockResource(hResData); // Get the address of the loaded resource
+
+						snapshot_bytes_ = new char[snapshot_size_];
+						memcpy(snapshot_bytes_, lpAddress, snapshot_size_);
+
+						v8::StartupData* startup_data = new v8::StartupData;
+						startup_data->data = snapshot_bytes_;
+						startup_data->raw_size = snapshot_size_;
+						create_params.snapshot_blob = startup_data;
+
+					}
+					else {
+						log_warning("Snapshot resource not loaded");
+					}
+				}
+				else {
+					log_warning("Snapshot resource not found");
+				}
+
+
+			}
+
+			mtx.unlock();
+
+		}
+
+
+		log_warning("before isolate construction");
+
+		v8::Isolate* isolate = v8::Isolate::New(create_params);
+
+		log_warning("after isolate construction");
+
+		return isolate;
+
 	}
 	V8CBRIDGE_API ContextPtr v8_Isolate_NewContext(IsolatePtr isolate_ptr) {
 		ISOLATE_SCOPE(static_cast<v8::Isolate*>(isolate_ptr));
@@ -324,12 +387,11 @@ extern "C" {
 		if (nameLocal.IsEmpty()) {
 			return nullptr;
 		}
-
+		/*
 		v8::Local<v8::FunctionTemplate> cb =
 			v8::FunctionTemplate::New(isolate, go_callback,
 				idLocal.ToLocalChecked());
 		cb->SetClassName(nameLocal.ToLocalChecked());
-
 		v8::MaybeLocal<v8::Function> fn = cb->GetFunction(ctx);
 
 		if (fn.IsEmpty()) {
@@ -337,6 +399,9 @@ extern "C" {
 		}
 
 		return new Value(isolate, fn.ToLocalChecked());
+		*/
+
+		return nullptr;
 	}
 
 	V8CBRIDGE_API void go_callback(const v8::FunctionCallbackInfo<v8::Value>& args) {

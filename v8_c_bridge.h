@@ -140,13 +140,15 @@ extern "C" {
 	V8CBRIDGE_API typedef ValueTuple(*GoCallbackHandlerPtr)(String id, CallerInfo info, int argc, ValueTuple* argv);
 
 	// v8_Init must be called once before anything else.
-	V8CBRIDGE_API void v8_Init(GoCallbackHandlerPtr callback_handler);
+	V8CBRIDGE_API void v8_Init(GoCallbackHandlerPtr callback_handler, const char* icu_data_file);
 
 	// typedef unsigned int uint32_t;
 
 	/* V8CBRIDGE_API extern StartupData v8_CreateSnapshotDataBlob(const char* js); */
 
-	V8CBRIDGE_API extern IsolatePtr v8_Isolate_New(StartupData data);
+	// Pass NULL as startup_data to use the default snapshot.
+	V8CBRIDGE_API extern IsolatePtr v8_Isolate_New(StartupData* startup_data);
+
 	V8CBRIDGE_API extern ContextPtr v8_Isolate_NewContext(IsolatePtr isolate);
 	V8CBRIDGE_API extern void       v8_Isolate_Terminate(IsolatePtr isolate);
 	V8CBRIDGE_API extern void       v8_Isolate_Release(IsolatePtr isolate);

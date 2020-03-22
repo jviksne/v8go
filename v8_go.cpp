@@ -3,6 +3,6 @@
 
 extern "C" ValueTuple goCallbackHandler(String id, CallerInfo info, int argc, ValueTuple* argv);
 
-extern "C" void initGoCallbackHanlder() {
-     v8_Init(goCallbackHandler);
+extern "C" void initWithGoCallbackHanlder(char* icu_data_file) {
+     v8_Init(goCallbackHandler, icu_data_file);
 }

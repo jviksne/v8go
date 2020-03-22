@@ -30,12 +30,8 @@ import (
 	"sync"
 	"time"
 	"unsafe"
+	"sync/atomic"
 )
-
-func v8Init() {
-	//C.v8_Init(unsafe.Pointer(goCallbackHandler))
-	C.initGoCallbackHanlder() // defined in v8_go.h, implemented in v8_go.cc, references goCallbackHandler function implemented in this file.
-}
 
 // Callback is the signature for callback functions that are registered with a
 // V8 context via Bind(). Never return a Value from a different V8 isolate. A
@@ -104,6 +100,22 @@ func (s PromiseState) String() string {
 
 // Ensure that v8 is initialized exactly once on first use.
 var v8InitOnce sync.Once
+var isInit int32 = 0
+
+func Init(icuDataFile string) {
+	//C.v8_Init(unsafe.Pointer(goCallbackHandler))
+	v8InitOnce.Do(func() {
+		C.initWithGoCallbackHanlder(C.CString(icuDataFile))
+		atomic.StoreInt32(&isInit, 1)
+	}) // defined in v8_go.h, implemented in v8_go.cc, references goCallbackHandler function implemented in this file.
+}
+
+func IsInit() bool {
+	if (atomic.LoadInt32(&isInit) == 1) {
+		return true
+	}
+	return false
+}
 
 // Snapshot contains the stored VM state that can be used to quickly recreate a
 // new VM at that particular state.
@@ -163,20 +175,26 @@ type Isolate struct {
 }
 
 // NewIsolate creates a new V8 Isolate.
-func NewIsolate() *Isolate {
-	v8InitOnce.Do(func() { v8Init() })
-	iso := &Isolate{ptr: C.v8_Isolate_New(C.StartupData{ptr: nil, len: 0})}
+func NewIsolate() (*Isolate, error) {
+	//v8InitOnce.Do(func() { v8Init() })
+	if !IsInit() {
+		return nil, fmt.Errorf("V8 not init")
+	}
+	iso := &Isolate{ptr: C.v8_Isolate_New(nil)}
 	runtime.SetFinalizer(iso, (*Isolate).release)
-	return iso
+	return iso, nil
 }
 
 // NewIsolateWithSnapshot creates a new V8 Isolate using the supplied Snapshot
 // to initialize all Contexts created from this Isolate.
-func NewIsolateWithSnapshot(s *Snapshot) *Isolate {
-	v8InitOnce.Do(func() { v8Init() })
-	iso := &Isolate{ptr: C.v8_Isolate_New(s.data), s: s}
+func NewIsolateWithSnapshot(s *Snapshot) (*Isolate, error) {
+	//v8InitOnce.Do(func() { v8Init() })
+	if !IsInit() {
+		return nil, fmt.Errorf("V8 not init")
+	}
+	iso := &Isolate{ptr: C.v8_Isolate_New(&s.data), s: s} //TODO: verify that passing the pointer this way works correctly
 	runtime.SetFinalizer(iso, (*Isolate).release)
-	return iso
+	return iso, nil
 }
 
 // NewContext creates a new, clean V8 Context within this Isolate.
