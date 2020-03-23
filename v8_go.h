@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-extern void initWithGoCallbackHanlder(char* icu_data_file);
+extern void initWithGoCallbackHanlder(const char* icu_data_file);
 
 #ifdef __cplusplus
 }
