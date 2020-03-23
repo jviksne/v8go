@@ -105,8 +105,7 @@ var isInit int32 = 0
 func Init(icuDataFile string) {
 	//C.v8_Init(unsafe.Pointer(goCallbackHandler))
 	v8InitOnce.Do(func() {
-		fmt.Println("Passing C.CString test.icu")
-		C.initWithGoCallbackHanlder(C.CString("test.icu"))
+		C.initWithGoCallbackHanlder(C.CString(icuDataFile))
 		atomic.StoreInt32(&isInit, 1)
 	}) // defined in v8_go.h, implemented in v8_go.cc, references goCallbackHandler function implemented in this file.
 }
