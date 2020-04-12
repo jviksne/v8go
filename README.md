@@ -38,7 +38,7 @@ ln -s $(pwd)/data/vendor/v8/include $GOPATH/src/github.com/augustoroman/v8/inclu
 ln -s $(pwd)/data/vendor/v8/out/x64.release $GOPATH/src/github.com/augustoroman/v8/libv8
 
 # Run the tests to make sure everything works
-cd $GOPATH/src/github.com/augustoroman/v8
+cd $GOPATH/src/github.com/jviksne/v8go
 go test
 ```
 
@@ -94,8 +94,8 @@ You need to build v8 statically and place it in a location cgo knows about. This
 1.  Build the bindings
 
 ```
-go get github.com/augustoroman/v8
-export V8_GO=$GOPATH/src/github.com/augustoroman/v8
+go get github.com/jviksne/v8go
+export V8_GO=$GOPATH/src/github.com/jviksne/v8go
 export V8_BUILD=$V8_GO/v8/build #or wherever you like
 mkdir -p $V8_BUILD
 cd $V8_BUILD

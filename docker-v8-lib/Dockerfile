@@ -1,5 +1,5 @@
 # This dockerfile will build v8 as static libraries suitable for being linked
-# to the github.com/augustoroman/v8 go library bindings.
+# to the github.com/jviksne/v8go go library bindings.
 #
 # The V8_VERSION arg is required and specifies which v8 git version to build.
 # The recommended incantation to build this is:

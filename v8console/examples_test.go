@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/augustoroman/v8"
-	"github.com/augustoroman/v8/v8console"
+	v8 "github.com/jviksne/v8go"
+	"github.com/jviksne/v8go/v8console"
 )
 
 func ExampleFlushSnapshotAndInject() {

@@ -3,9 +3,15 @@ package v8
 import "testing"
 
 func BenchmarkGetValue(b *testing.B) {
-	ctx := NewIsolate().NewContext()
 
-	_, err := ctx.Eval(`var hello = "test"`, "bench.js")
+	iso, err := NewIsolate()
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	ctx := iso.NewContext()
+
+	_, err = ctx.Eval(`var hello = "test"`, "bench.js")
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -21,7 +27,13 @@ func BenchmarkGetValue(b *testing.B) {
 }
 
 func BenchmarkGetNumberValue(b *testing.B) {
-	ctx := NewIsolate().NewContext()
+
+	iso, err := NewIsolate()
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	ctx := iso.NewContext()
 	val, err := ctx.Eval(`(157)`, "bench.js")
 	if err != nil {
 		b.Fatal(err)
@@ -38,7 +50,13 @@ func BenchmarkGetNumberValue(b *testing.B) {
 }
 
 func BenchmarkContextCreate(b *testing.B) {
-	ctx := NewIsolate().NewContext()
+
+	iso, err := NewIsolate()
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	ctx := iso.NewContext()
 
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
@@ -49,7 +67,11 @@ func BenchmarkContextCreate(b *testing.B) {
 }
 
 func BenchmarkEval(b *testing.B) {
-	iso := NewIsolate()
+	iso, err := NewIsolate()
+	if err != nil {
+		b.Fatal(err)
+	}
+
 	ctx := iso.NewContext()
 
 	script := `"hello"`
@@ -63,7 +85,13 @@ func BenchmarkEval(b *testing.B) {
 }
 
 func BenchmarkCallback(b *testing.B) {
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	ctx := iso.NewContext()
+
 	ctx.Global().Set("cb", ctx.Bind("cb", func(in CallbackArgs) (*Value, error) {
 		return nil, nil
 	}))

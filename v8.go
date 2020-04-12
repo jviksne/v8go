@@ -28,9 +28,9 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unsafe"
-	"sync/atomic"
 )
 
 // Callback is the signature for callback functions that are registered with a
@@ -111,7 +111,7 @@ func Init(icuDataFile string) {
 }
 
 func IsInit() bool {
-	if (atomic.LoadInt32(&isInit) == 1) {
+	if atomic.LoadInt32(&isInit) == 1 {
 		return true
 	}
 	return false
@@ -153,18 +153,33 @@ func RestoreSnapshotFromExport(data []byte) *Snapshot {
 	return newSnapshot(str)
 }
 
-/*
 // CreateSnapshot creates a new Snapshot after running the supplied JS code.
 // Because Snapshots cannot have refences to external code (no Go callbacks),
 // all of the initialization code must be pure JS and supplied at once as the
 // arg to this function.
-func CreateSnapshot(js string) *Snapshot {
-	v8InitOnce.Do(func() { v8Init() })
-	js_ptr := C.CString(js)
-	defer C.free(unsafe.Pointer(js_ptr))
-	return newSnapshot(C.v8_CreateSnapshotDataBlob(js_ptr))
+// isol can be null.
+func CreateSnapshot(js string, includeCompiledFnCode bool, iso *Isolate) (*Snapshot, error) {
+	//v8InitOnce.Do(func() { v8Init() })
+	if !IsInit() {
+		return nil, fmt.Errorf("V8 not init")
+	}
+
+	jsPtr := C.CString(js)
+	defer C.free(unsafe.Pointer(jsPtr))
+
+	var isoPtr C.IsolatePtr
+
+	if iso != nil {
+		isoPtr = iso.ptr
+	}
+
+	includeCompiledFnCodeInt := 0
+	if includeCompiledFnCode {
+		includeCompiledFnCodeInt = 1
+	}
+
+	return newSnapshot(C.v8_CreateSnapshotDataBlob(jsPtr, C.int(includeCompiledFnCodeInt), isoPtr)), nil
 }
-*/
 
 // Isolate represents a single-threaded V8 engine instance.  It can run multiple
 // independent Contexts and V8 values can be freely shared between the Contexts,

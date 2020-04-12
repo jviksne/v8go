@@ -144,7 +144,8 @@ extern "C" {
 
 	// typedef unsigned int uint32_t;
 
-	/* V8CBRIDGE_API extern StartupData v8_CreateSnapshotDataBlob(const char* js); */
+	// isolate_ptr is optional
+	V8CBRIDGE_API StartupData v8_CreateSnapshotDataBlob(const char* js, int includeCompiledFnCode, IsolatePtr isolate_ptr);
 
 	// Pass NULL as startup_data to use the default snapshot.
 	V8CBRIDGE_API extern IsolatePtr v8_Isolate_New(StartupData* startup_data);

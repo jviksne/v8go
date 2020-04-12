@@ -17,7 +17,11 @@ import (
 
 func TestRunSimpleJS(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 	res, err := ctx.Eval(`
 		var a = 10;
 		var b = 20;
@@ -34,7 +38,11 @@ func TestRunSimpleJS(t *testing.T) {
 
 func TestBoolConversion(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
 	testcases := []struct {
 		js       string
@@ -77,7 +85,11 @@ func TestBoolConversion(t *testing.T) {
 
 func TestJsRegex(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
 	re, err := ctx.Eval(`/foo.*bar/`, "test.js")
 	if err != nil {
@@ -93,7 +105,11 @@ func TestJsRegex(t *testing.T) {
 
 func TestNumberConversions(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
 	res, err := ctx.Eval(`13`, "test.js")
 	if err != nil {
@@ -118,7 +134,11 @@ func TestNumberConversions(t *testing.T) {
 
 func TestNumberConversionsFailForNonNumbers(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
 	res, err := ctx.Eval(`undefined`, "test.js")
 	if err != nil {
@@ -140,7 +160,11 @@ func TestNumberConversionsFailForNonNumbers(t *testing.T) {
 
 func TestErrorRunningInvalidJs(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
 	res, err := ctx.Eval(`kajsdfa91j23e`, "junk.js")
 	if err == nil {
@@ -150,7 +174,11 @@ func TestErrorRunningInvalidJs(t *testing.T) {
 
 func TestValueString(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
 	testcases := []struct{ jsCode, toString string }{
 		// primitives:
@@ -184,7 +212,11 @@ func TestValueString(t *testing.T) {
 
 func TestJsReturnStringWithEmbeddedNulls(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 	res, err := ctx.Eval(`"foo\000bar"`, "test.js")
 	if err != nil {
 		t.Fatalf("Error evaluating javascript, err: %v", err)
@@ -196,7 +228,11 @@ func TestJsReturnStringWithEmbeddedNulls(t *testing.T) {
 
 func TestJsReturnUndefined(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 	res, err := ctx.Eval(``, "undefined.js")
 	if err != nil {
 		t.Fatalf("Error evaluating javascript, err: %v", err)
@@ -211,7 +247,11 @@ func TestJsReturnUndefined(t *testing.T) {
 
 func TestJsReturnArrayBuffer(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 	res, err := ctx.Eval(`new ArrayBuffer(5)`, "undefined.js")
 	if err != nil {
 		t.Fatalf("Error evaluating javascript, err: %v", err)
@@ -227,7 +267,11 @@ func TestJsReturnArrayBuffer(t *testing.T) {
 
 func TestJsThrowString(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 	res, err := ctx.Eval(`throw 'badness'`, "my_file.js")
 	if err == nil {
 		t.Fatalf("It worked but it wasn't supposed to: %v", res.String())
@@ -240,7 +284,11 @@ func TestJsThrowString(t *testing.T) {
 
 func TestJsThrowError(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 	res, err := ctx.Eval(`throw new Error('ooopsie')`, "my_file.js")
 	if err == nil {
 		t.Fatalf("It worked but it wasn't supposed to: %v", res.String())
@@ -253,7 +301,11 @@ func TestJsThrowError(t *testing.T) {
 
 func TestReadFieldFromObject(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 	res, err := ctx.Eval(`({foo:"bar"})`, "my_file.js")
 	if err != nil {
 		t.Fatalf("Error evaluating javascript, err: %v", err)
@@ -270,7 +322,11 @@ func TestReadFieldFromObject(t *testing.T) {
 func TestReadAndWriteIndexFromArrayBuffer(t *testing.T) {
 	t.Parallel()
 
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 	val, err := ctx.Create(struct {
 		Data []byte `v8:"arraybuffer"`
 	}{[]byte{1, 2, 3}})
@@ -343,7 +399,11 @@ func TestReadAndWriteIndexFromArrayBuffer(t *testing.T) {
 
 func TestReadAndWriteIndexFromArray(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 	val, err := ctx.Create([]int{1, 2, 3})
 	if err != nil {
 		t.Fatal(err)
@@ -374,7 +434,11 @@ func TestReadAndWriteIndexFromArray(t *testing.T) {
 
 func TestReadFieldFromNonObjectFails(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 	res, err := ctx.Eval(`17`, "my_file.js")
 	if err != nil {
 		t.Fatalf("Error evaluating javascript, err: %v", err)
@@ -391,8 +455,12 @@ func TestReadFieldFromNonObjectFails(t *testing.T) {
 
 func TestReadFieldFromGlobal(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
-	_, err := ctx.Eval(`foo = "bar";`, "my_file.js")
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
+	_, err = ctx.Eval(`foo = "bar";`, "my_file.js")
 	if err != nil {
 		t.Fatalf("Error evaluating javascript, err: %v", err)
 	}
@@ -407,7 +475,11 @@ func TestReadFieldFromGlobal(t *testing.T) {
 
 func TestSetField(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
 	three, err := ctx.Eval(`(3)`, "")
 	if err != nil {
@@ -429,8 +501,12 @@ func TestSetField(t *testing.T) {
 
 func TestRunningCodeInContextAfterThrowingError(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
-	_, err := ctx.Eval(`
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
+	_, err = ctx.Eval(`
 		function fail(a,b) {
 			this.c = a+b;
 			throw "some failure";
@@ -472,7 +548,10 @@ func TestManyContextsThrowingErrors(t *testing.T) {
 
 	var done sync.WaitGroup
 
-	iso := NewIsolate()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	done.Add(N)
 	for i := 0; i < N; i++ {
@@ -492,8 +571,12 @@ func TestManyContextsThrowingErrors(t *testing.T) {
 
 func TestErrorsInNativeCode(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
-	_, err := ctx.Eval(`[].map(undefined);`, "map_undef.js")
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
+	_, err = ctx.Eval(`[].map(undefined);`, "map_undef.js")
 	if err == nil {
 		t.Fatal("Expected error.")
 	}
@@ -502,7 +585,11 @@ func TestErrorsInNativeCode(t *testing.T) {
 
 func TestCallFunctionWithExplicitThis(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 	this, _ := ctx.Eval(`(function(){ this.z = 3; return this; })()`, "")
 	add, _ := ctx.Eval(`((x,y)=>(x+y+this.z))`, "")
 	one, _ := ctx.Eval(`1`, "")
@@ -517,7 +604,11 @@ func TestCallFunctionWithExplicitThis(t *testing.T) {
 
 func TestCallFunctionWithGlobalScope(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 	ctx.Eval(`z = 4`, "")
 	add, _ := ctx.Eval(`((x,y)=>(x+y+this.z))`, "")
 	one, _ := ctx.Eval(`1`, "")
@@ -532,7 +623,11 @@ func TestCallFunctionWithGlobalScope(t *testing.T) {
 
 func TestCallFunctionFailsOnNonFunction(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 	ob, _ := ctx.Eval(`({x:3})`, "")
 	res, err := ob.Call(nil)
 	if err == nil {
@@ -544,7 +639,11 @@ func TestCallFunctionFailsOnNonFunction(t *testing.T) {
 
 func TestNewFunction(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 	cons, _ := ctx.Eval(`(function(){ this.x = 1; })`, "")
 	obj, err := cons.New()
 	if err != nil {
@@ -560,7 +659,11 @@ func TestNewFunction(t *testing.T) {
 
 func TestNewFunctionThrows(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 	cons, _ := ctx.Eval(`(function(){ throw "oops"; })`, "")
 	obj, err := cons.New()
 	if err == nil {
@@ -572,7 +675,11 @@ func TestNewFunctionThrows(t *testing.T) {
 
 func TestNewFunctionWithArgs(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 	cons, _ := ctx.Eval(`(function(x, y){ this.x = x + y; })`, "")
 	one, _ := ctx.Eval(`1`, "")
 	two, _ := ctx.Eval(`2`, "")
@@ -590,7 +697,11 @@ func TestNewFunctionWithArgs(t *testing.T) {
 
 func TestNewFunctionFailsOnNonFunction(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 	ob, _ := ctx.Eval(`({x:3})`, "")
 	res, err := ob.New()
 	if err == nil {
@@ -602,7 +713,11 @@ func TestNewFunctionFailsOnNonFunction(t *testing.T) {
 
 func TestBind(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
 	var expectedLoc Loc
 
@@ -643,7 +758,11 @@ func TestBind(t *testing.T) {
 
 func TestBindReturnsError(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
 	fails := ctx.Bind("fails", func(CallbackArgs) (*Value, error) {
 		return nil, errors.New("borked")
@@ -658,7 +777,11 @@ func TestBindReturnsError(t *testing.T) {
 
 func TestBindPanics(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
 	panic := ctx.Bind("panic", func(CallbackArgs) (*Value, error) { panic("aaaah!!") })
 	ctx.Global().Set("panic", panic)
@@ -672,7 +795,11 @@ func TestBindPanics(t *testing.T) {
 
 func TestBindName(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
 	xyz := ctx.Bind("xyz", func(CallbackArgs) (*Value, error) { return nil, nil })
 	if str := xyz.String(); str != "function xyz() { [native code] }" {
@@ -682,7 +809,11 @@ func TestBindName(t *testing.T) {
 
 func TestBindNilReturn(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
 	xyz := ctx.Bind("xyz", func(CallbackArgs) (*Value, error) { return nil, nil })
 	res, err := xyz.Call(nil)
@@ -696,7 +827,11 @@ func TestBindNilReturn(t *testing.T) {
 
 func TestTerminate(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
 	waitUntilRunning := make(chan bool)
 	notify := ctx.Bind("notify", func(CallbackArgs) (*Value, error) {
@@ -735,8 +870,16 @@ func TestTerminate(t *testing.T) {
 
 func TestSnapshot(t *testing.T) {
 	t.Parallel()
-	snapshot := CreateSnapshot("zzz='hi there!';")
-	ctx := NewIsolateWithSnapshot(snapshot).NewContext()
+	snapshot, err := CreateSnapshot("zzz='hi there!';", true, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	iso, err := NewIsolateWithSnapshot(snapshot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
 	res, err := ctx.Eval(`zzz`, "script.js")
 	if err != nil {
@@ -749,15 +892,22 @@ func TestSnapshot(t *testing.T) {
 
 func TestSnapshotBadJs(t *testing.T) {
 	t.Parallel()
-	snapshot := CreateSnapshot("This isn't yo mama's snapshot!")
+	snapshot, err := CreateSnapshot("This isn't yo mama's snapshot!", true, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if snapshot.data.ptr != nil {
 		t.Error("Expected nil ptr")
 	}
 
-	ctx := NewIsolateWithSnapshot(snapshot).NewContext()
+	iso, err := NewIsolateWithSnapshot(snapshot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
-	_, err := ctx.Eval(`zzz`, "script.js")
+	_, err = ctx.Eval(`zzz`, "script.js")
 	if err == nil {
 		t.Fatal("Expected error because zzz should be undefined.")
 	}
@@ -769,7 +919,11 @@ func TestEs6Destructuring(t *testing.T) {
 	}
 
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
 	bar, err := ctx.Eval(`
 		const f = (n) => ({foo:n, bar:n+1});
@@ -786,7 +940,11 @@ func TestEs6Destructuring(t *testing.T) {
 
 func TestJsonExport(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
 	var json_stringify *Value
 	if json, err := ctx.Global().Get("JSON"); err != nil {
@@ -812,7 +970,10 @@ func TestJsonExport(t *testing.T) {
 
 func TestValueReleaseMoreThanOnceIsOk(t *testing.T) {
 	t.Parallel()
-	iso := NewIsolate()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
 	ctx := iso.NewContext()
 
 	res, err := ctx.Eval("5", "test.js")
@@ -834,7 +995,7 @@ func TestValueReleaseMoreThanOnceIsOk(t *testing.T) {
 
 func TestSharingValuesAmongContextsInAnIsolate(t *testing.T) {
 	t.Parallel()
-	iso := NewIsolate()
+	iso, err := NewIsolate()
 	ctx1, ctx2 := iso.NewContext(), iso.NewContext()
 
 	//  Create a value in ctx1
@@ -875,7 +1036,11 @@ func TestSharingValuesAmongContextsInAnIsolate(t *testing.T) {
 
 func TestCreateSimple(t *testing.T) {
 	t.Parallel()
-	iso := NewIsolate()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	ctx := iso.NewContext()
 
 	callback := func(CallbackArgs) (*Value, error) { return nil, nil }
@@ -916,7 +1081,11 @@ func TestCreateSimple(t *testing.T) {
 
 func TestCreateComplex(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
 	fn := func(CallbackArgs) (*Value, error) { return ctx.Create("abc") }
 	type Struct struct {
@@ -1006,7 +1175,11 @@ func TestCreateComplex(t *testing.T) {
 
 func TestJsCreateArrayBufferRoundtrip(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 	val, err := ctx.Create(struct {
 		Data []byte `v8:"arraybuffer"`
 	}{[]byte{1, 2, 3, 4}})
@@ -1068,7 +1241,11 @@ func TestJsCreateArrayBufferRoundtrip(t *testing.T) {
 
 func TestTypedArrayBuffers(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
 	uint8Array, err := ctx.Eval(`
 		new Uint8Array(4).fill(4, 1, 3) // taken from a MDN example
@@ -1085,7 +1262,11 @@ func TestTypedArrayBuffers(t *testing.T) {
 
 func TestCreateJsonTags(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
 	type A struct {
 		Embedded    string `json:"embedded"`
@@ -1117,7 +1298,11 @@ func TestCreateJsonTags(t *testing.T) {
 
 func TestParseJson(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 	val, err := ctx.ParseJson(`{"foo":"bar","bar":3}`)
 	if err != nil {
 		t.Fatal(err)
@@ -1137,7 +1322,11 @@ func TestParseJson(t *testing.T) {
 
 func TestJsonMarshal(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 	val, err := ctx.Eval(`(()=>({
 		blah: 3,
 		muck: true,
@@ -1167,8 +1356,17 @@ func TestCallbackProvideCorrectContext(t *testing.T) {
 	greet := func(in CallbackArgs) (*Value, error) {
 		return in.Context.Create("Hello " + in.Arg(0).String())
 	}
+	isol1, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	ctx1, ctx2 := NewIsolate().NewContext(), NewIsolate().NewContext()
+	isol2, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx1, ctx2 := isol1.NewContext(), isol2.NewContext()
 	ctx1.Global().Set("greet", ctx1.Bind("greet", greet))
 	ctx2.Global().Set("greet", ctx2.Bind("greet", greet))
 
@@ -1190,7 +1388,11 @@ func TestCallbackProvideCorrectContext(t *testing.T) {
 func TestCircularReferenceJsonMarshalling(t *testing.T) {
 	t.Parallel()
 
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 	circ, err := ctx.Eval("var test = {}; test.blah = test", "circular.js")
 	if err != nil {
 		t.Fatalf("Failed to create object with circular ref: %v", err)
@@ -1205,7 +1407,10 @@ func TestCircularReferenceJsonMarshalling(t *testing.T) {
 
 func TestIsolateFinalizer(t *testing.T) {
 	t.Parallel()
-	iso := NewIsolate()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	fin := make(chan bool)
 	// Reset the finalizer so we test if it is working
@@ -1220,7 +1425,11 @@ func TestIsolateFinalizer(t *testing.T) {
 		t.Fatal("finalizer of iso didn't run, no context is associated with the iso.")
 	}
 
-	iso = NewIsolate()
+	iso, err = NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	iso.NewContext()
 
 	fin = make(chan bool)
@@ -1239,7 +1448,11 @@ func TestIsolateFinalizer(t *testing.T) {
 
 func TestContextFinalizer(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
 	fin := make(chan bool)
 	// Reset the finalizer so we test if it is working
@@ -1257,7 +1470,11 @@ func TestContextFinalizer(t *testing.T) {
 
 func TestContextFinalizerWithValues(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
 	greet := func(in CallbackArgs) (*Value, error) {
 		return in.Context.Create("Hello " + in.Arg(0).String())
@@ -1284,7 +1501,11 @@ func TestContextFinalizerWithValues(t *testing.T) {
 }
 
 func TestIsolateGetHeapStatistics(t *testing.T) {
-	iso := NewIsolate()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	initHeap := iso.GetHeapStatistics()
 	if initHeap.TotalHeapSize <= 0 {
 		t.Fatalf("expected heap to be more than zero, got: %d\n", initHeap.TotalHeapSize)
@@ -1332,7 +1553,11 @@ func runGcUntilReceivedOrTimedOut(signal <-chan bool, timeout time.Duration) boo
 // This is bad, and should be fixed! See https://github.com/augustoroman/v8/issues/21
 func TestMicrotasksIgnoreUnhandledPromiseRejection(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 	var logs []string
 	ctx.Global().Set("log", ctx.Bind("log", func(in CallbackArgs) (*Value, error) {
 		logs = append(logs, in.Arg(0).String())
@@ -1369,7 +1594,11 @@ func TestMicrotasksIgnoreUnhandledPromiseRejection(t *testing.T) {
 
 func TestValueKind(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
 	// WASM: This wasm code corresponds to the WAT:
 	//   (module
@@ -1444,7 +1673,11 @@ func TestValueKind(t *testing.T) {
 
 func TestDate(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
 	res, err := ctx.Eval(`new Date("2018-05-08T08:16:46.918Z")`, "date.js")
 	if err != nil {
@@ -1461,7 +1694,11 @@ func TestDate(t *testing.T) {
 
 func TestPromise(t *testing.T) {
 	t.Parallel()
-	ctx := NewIsolate().NewContext()
+	iso, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := iso.NewContext()
 
 	// Pending
 	v, err := ctx.Eval(`new Promise((resolve, reject)=>{})`, "pending-promise.js")
@@ -1538,6 +1775,9 @@ func TestPanicHandling(t *testing.T) {
 	}()
 
 	var f *big.Float
-	_ = NewIsolate()
+	_, err := NewIsolate()
+	if err != nil {
+		t.Fatal(err)
+	}
 	_ = *f
 }

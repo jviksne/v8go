@@ -173,16 +173,92 @@ std::string report_exception(v8::Isolate* isolate, v8::Local<v8::Context> ctx, v
 	return ss.str();
 }
 
-std::unique_ptr<v8::Platform> platform_ = nullptr; // Platform has to be global in order for many global variables not to get freed
+// Platform has to be global
+std::unique_ptr<v8::Platform> platform_ = nullptr;
 
 char* snapshot_bytes_ = nullptr; // the default snapshot stored in resources
-DWORD snapshot_size_ = -1; // -1 means that the default snapshot has not been loaded from resources
+DWORD snapshot_size_; // -1 means that the default snapshot has not been loaded from resources
+bool snapshot_loadad_ = false;
 std::mutex mtx;
 
 void log_warning(const char* msg) {
-	std::cout << "Warning: ";
-	std::cout << msg; // TODO: implement some other kind of logging mechanism
-	std::cout << "\n";
+	std::cout << "Warning: " << msg << "\n"; // TODO: implement some other kind of logging mechanism
+}
+
+// based on v8-8.0.426\v8\src\snapshot\snapshot-common.cc RunExtraCode
+bool RunExtraCode(v8::Isolate* isolate, v8::Local<v8::Context> context,
+	const char* utf8_source, const char* name) {
+	v8::Context::Scope context_scope(context);
+	v8::TryCatch try_catch(isolate);
+	v8::Local<v8::String> source_string;
+	if (!v8::String::NewFromUtf8(isolate, utf8_source, v8::NewStringType::kNormal)
+		.ToLocal(&source_string)) {
+		return false;
+	}
+	v8::Local<v8::String> resource_name =
+		v8::String::NewFromUtf8(isolate, name, v8::NewStringType::kNormal)
+		.ToLocalChecked();
+	v8::ScriptOrigin origin(resource_name);
+	v8::ScriptCompiler::Source source(source_string, origin);
+	v8::Local<v8::Script> script;
+	if (!v8::ScriptCompiler::Compile(context, &source).ToLocal(&script))
+		return false;
+	if (script->Run(context).IsEmpty()) return false;
+	if (try_catch.HasCaught()) return false; // TODO: or exit?
+	return true;
+}
+
+v8::StartupData* GetSnapshotFromRes() {
+	mtx.lock();
+
+	log_warning("Trying to load from resources");
+
+	// if snapshot has not been loaded in memory yet
+	if (!snapshot_loadad_) {
+
+		log_warning("Before getting module handle");
+
+		snapshot_loadad_ = true; // do not try to load it again
+
+		HMODULE hModule = GetModuleHandle(L"V8CBRIDGE.dll");
+		HRSRC hResInfo = FindResource(hModule, MAKEINTRESOURCE(IDR_SNAPSHOT1), L"snapshot"); // obtain handle of the resource
+		if (hResInfo != 0) {
+
+			log_warning("before LoadResource");
+
+			HGLOBAL hResData = LoadResource(hModule, hResInfo); // Load the resource
+			snapshot_size_ = SizeofResource(hModule, hResInfo);
+
+			std::cout << snapshot_size_;
+
+			if (hResData != 0) {
+				LPVOID lpAddress = LockResource(hResData); // Get the address of the loaded resource
+
+				snapshot_bytes_ = new char[snapshot_size_];
+				memcpy(snapshot_bytes_, lpAddress, snapshot_size_);
+
+				log_warning("Snapshot resource loaded");
+
+			}
+			else {
+				log_warning("Snapshot resource not loaded");
+			}
+		}
+		else {
+			log_warning("Snapshot resource not found");
+		}
+
+
+	}
+
+	mtx.unlock();
+
+	v8::StartupData* startup_data = new v8::StartupData;
+	startup_data->data = snapshot_bytes_;
+	startup_data->raw_size = snapshot_size_;
+
+	return startup_data;
+
 }
 
 extern "C" {
@@ -196,14 +272,15 @@ extern "C" {
 		mtx.lock();
 
 		//init only once
-		if (platform_ != nullptr)
+		if (platform_ != nullptr) {
+			mtx.unlock();
 			return;
+		}
 
 		//const char* path
 		//v8::V8::InitializeICUDefaultLocation(path);
 		//v8::V8::InitializeExternalStartupData(path);
 
-		// Platform has to be global
 		platform_ = v8::platform::NewDefaultPlatform(
 			0, // thread_pool_size
 			v8::platform::IdleTaskSupport::kDisabled,
@@ -224,15 +301,33 @@ extern "C" {
 		free(ptr);
 	}
 
-	/*
-	TODO: probably to be ported to use v8::SnapshotCreator, though possibly snapshots are to be created via a command line utility mksnapshot.
-	V8CBRIDGE_API StartupData v8_CreateSnapshotDataBlob(const char* js) {
-		v8::StartupData data = v8::V8::CreateSnapshotDataBlob(js);
+	V8CBRIDGE_API StartupData v8_CreateSnapshotDataBlob(const char* js, int includeCompiledFnCode, IsolatePtr isolate_ptr) {
+
+		//Based on v8-8.0.426\v8\src\snapshot\snapshot-common.cc CreateSnapshotDataBlobInternal
+		
+		// If no isolate is passed in, create it (and a new context) from scratch.
+		if (isolate_ptr == nullptr) isolate_ptr = v8::Isolate::Allocate();
+
+		// Optionally run a script to embed, and serialize to create a snapshot blob.
+		v8::SnapshotCreator snapshot_creator(static_cast<v8::Isolate*>(isolate_ptr));
+		{
+			v8::HandleScope scope(static_cast<v8::Isolate*>(isolate_ptr));
+			v8::Local<v8::Context> context = v8::Context::New(static_cast<v8::Isolate*>(isolate_ptr));
+			if (js != nullptr &&
+				!RunExtraCode(static_cast<v8::Isolate*>(isolate_ptr), context, js, "<embedded>")) {
+				return {};
+			}
+			snapshot_creator.SetDefaultContext(context);
+		}
+
+		v8::StartupData data = snapshot_creator.CreateBlob(includeCompiledFnCode ? v8::SnapshotCreator::FunctionCodeHandling::kKeep : v8::SnapshotCreator::FunctionCodeHandling::kClear);
+
 		return StartupData{ data.data, data.raw_size };
 	}
-	*/
 
-	
+	// If StartupData is null then snapshot will be loaded from
+	// resources. To create an Isolate with no snapshot, pass
+	// and StartupData with len 0.
 	V8CBRIDGE_API IsolatePtr v8_Isolate_New(StartupData* data) {
 
 		v8::Isolate::CreateParams create_params;
@@ -241,52 +336,17 @@ extern "C" {
 
 		// if snapshot passed use that
 		if (data != nullptr) {
+			log_warning("Snapshot passed via arguments");
+			std::cout << data;
 			v8::StartupData* startup_data = new v8::StartupData;
 			startup_data->data = data->ptr;
 			startup_data->raw_size = data->len;
 			create_params.snapshot_blob = startup_data;
 		}
-		else { // use snapshot from resources
-
-			mtx.lock();
-
-			// if snapshot has not been loaded in memory yet
-			if (snapshot_size_ < 0) {
-
-				snapshot_size_ = 0; // do not try to load it again
-
-				HMODULE hModule = GetModuleHandle(L"V8CBRIDGE.dll");
-				HRSRC hResInfo = FindResource(hModule, MAKEINTRESOURCE(IDR_SNAPSHOT1), L"snapshot"); // obtain handle of the resource
-				if (hResInfo != 0) {
-					HGLOBAL hResData = LoadResource(hModule, hResInfo); // Load the resource
-					snapshot_size_ = SizeofResource(hModule, hResInfo);
-					if (hResData != 0) {
-						LPVOID lpAddress = LockResource(hResData); // Get the address of the loaded resource
-
-						snapshot_bytes_ = new char[snapshot_size_];
-						memcpy(snapshot_bytes_, lpAddress, snapshot_size_);
-
-						v8::StartupData* startup_data = new v8::StartupData;
-						startup_data->data = snapshot_bytes_;
-						startup_data->raw_size = snapshot_size_;
-						create_params.snapshot_blob = startup_data;
-
-					}
-					else {
-						log_warning("Snapshot resource not loaded");
-					}
-				}
-				else {
-					log_warning("Snapshot resource not found");
-				}
-
-
-			}
-
-			mtx.unlock();
-
+		else {
+			// load snapshot from resources
+			create_params.snapshot_blob = GetSnapshotFromRes();
 		}
-
 
 		log_warning("before isolate construction");
 
@@ -297,6 +357,7 @@ extern "C" {
 		return isolate;
 
 	}
+
 	V8CBRIDGE_API ContextPtr v8_Isolate_NewContext(IsolatePtr isolate_ptr) {
 		ISOLATE_SCOPE(static_cast<v8::Isolate*>(isolate_ptr));
 		v8::HandleScope handle_scope(isolate);
@@ -361,9 +422,37 @@ extern "C" {
 			res.error_msg = DupString(report_exception(isolate, ctx->ptr.Get(isolate), try_catch));
 		}
 		else {
-			v8::Local<v8::Value> resultChecked = result.ToLocalChecked();
-			res.Value = static_cast<PersistentValuePtr>(new Value(isolate, resultChecked));
+
+			if (try_catch.HasCaught()) {
+				std::cout << "try_catch has caught";
+			}
+			else {
+				std::cout << "try_catch has not caught";
+			}
+
+			if (result.IsEmpty()) {
+				std::cout << "result is empty";
+			}
+			else {
+				std::cout << "result is not empty";
+			}
+
+			v8::Local<v8::Value> resultChecked;
+			
+			if (!result.ToLocal(&resultChecked)) {
+				std::cout << "error converting to resultChecked";
+			}
+
+			if (resultChecked->IsUndefined()) {
+				std::cout << "resultChecked->IsUndefined() = true";
+			}
+			else {
+				std::cout << "resultChecked->IsUndefined() = false";
+			}
+
 			res.Kinds = v8_Value_KindsFromLocal(resultChecked);
+			res.Value = static_cast<PersistentValuePtr>(new Value(isolate, resultChecked));
+
 		}
 
 		return res;
@@ -387,9 +476,10 @@ extern "C" {
 		if (nameLocal.IsEmpty()) {
 			return nullptr;
 		}
-		/*
+
 		v8::Local<v8::FunctionTemplate> cb =
-			v8::FunctionTemplate::New(isolate, go_callback,
+			v8::FunctionTemplate::New(isolate,
+				static_cast<v8::FunctionCallback>(go_callback),
 				idLocal.ToLocalChecked());
 		cb->SetClassName(nameLocal.ToLocalChecked());
 		v8::MaybeLocal<v8::Function> fn = cb->GetFunction(ctx);
@@ -399,9 +489,7 @@ extern "C" {
 		}
 
 		return new Value(isolate, fn.ToLocalChecked());
-		*/
 
-		return nullptr;
 	}
 
 	V8CBRIDGE_API void go_callback(const v8::FunctionCallbackInfo<v8::Value>& args) {
