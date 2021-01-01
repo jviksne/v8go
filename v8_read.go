@@ -137,6 +137,11 @@ func readInto(dst interface{}, value *Value, path []string, maxDepth int) (err e
 
 			jsonFieldName := field.Tag.Get("json")
 
+			jsonOptIndex := strings.Index(jsonFieldName, ",")
+			if jsonOptIndex >= 0 {
+				jsonFieldName = jsonFieldName[0:jsonOptIndex]
+			}
+
 			if jsonFieldName == "" {
 				jsonFieldName = field.Name
 			}

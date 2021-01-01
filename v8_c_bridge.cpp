@@ -211,12 +211,12 @@ bool RunExtraCode(v8::Isolate* isolate, v8::Local<v8::Context> context,
 v8::StartupData* GetSnapshotFromRes() {
 	mtx.lock();
 
-	log_warning("Trying to load from resources");
+	//log_warning("Trying to load from resources");
 
 	// if snapshot has not been loaded in memory yet
 	if (!snapshot_loadad_) {
 
-		log_warning("Before getting module handle");
+		//log_warning("Before getting module handle");
 
 		snapshot_loadad_ = true; // do not try to load it again
 
@@ -224,12 +224,12 @@ v8::StartupData* GetSnapshotFromRes() {
 		HRSRC hResInfo = FindResource(hModule, MAKEINTRESOURCE(IDR_SNAPSHOT1), L"snapshot"); // obtain handle of the resource
 		if (hResInfo != 0) {
 
-			log_warning("before LoadResource");
+			//log_warning("before LoadResource");
 
 			HGLOBAL hResData = LoadResource(hModule, hResInfo); // Load the resource
 			snapshot_size_ = SizeofResource(hModule, hResInfo);
 
-			std::cout << snapshot_size_;
+			//std::cout << snapshot_size_;
 
 			if (hResData != 0) {
 				LPVOID lpAddress = LockResource(hResData); // Get the address of the loaded resource
@@ -237,15 +237,15 @@ v8::StartupData* GetSnapshotFromRes() {
 				snapshot_bytes_ = new char[snapshot_size_];
 				memcpy(snapshot_bytes_, lpAddress, snapshot_size_);
 
-				log_warning("Snapshot resource loaded");
+				//log_warning("Snapshot resource loaded");
 
 			}
 			else {
-				log_warning("Snapshot resource not loaded");
+				//log_warning("Snapshot resource not loaded");
 			}
 		}
 		else {
-			log_warning("Snapshot resource not found");
+			//log_warning("Snapshot resource not found");
 		}
 
 
@@ -336,8 +336,8 @@ extern "C" {
 
 		// if snapshot passed use that
 		if (data != nullptr) {
-			log_warning("Snapshot passed via arguments");
-			std::cout << data;
+			//log_warning("Snapshot passed via arguments");
+			//std::cout << data;
 			v8::StartupData* startup_data = new v8::StartupData;
 			startup_data->data = data->ptr;
 			startup_data->raw_size = data->len;
@@ -348,11 +348,11 @@ extern "C" {
 			create_params.snapshot_blob = GetSnapshotFromRes();
 		}
 
-		log_warning("before isolate construction");
+		//log_warning("before isolate construction");
 
 		v8::Isolate* isolate = v8::Isolate::New(create_params);
 
-		log_warning("after isolate construction");
+		//log_warning("after isolate construction");
 
 		return isolate;
 
@@ -422,7 +422,7 @@ extern "C" {
 			res.error_msg = DupString(report_exception(isolate, ctx->ptr.Get(isolate), try_catch));
 		}
 		else {
-
+			/*
 			if (try_catch.HasCaught()) {
 				std::cout << "try_catch has caught";
 			}
@@ -436,22 +436,29 @@ extern "C" {
 			else {
 				std::cout << "result is not empty";
 			}
+			*/
 
 			v8::Local<v8::Value> resultChecked;
 			
 			if (!result.ToLocal(&resultChecked)) {
-				std::cout << "error converting to resultChecked";
-			}
-
-			if (resultChecked->IsUndefined()) {
-				std::cout << "resultChecked->IsUndefined() = true";
+				res.error_msg = DupString("Error converting v8::MaybeLocal to v8::Local.");
+				//std::cout << "error converting to resultChecked";
 			}
 			else {
-				std::cout << "resultChecked->IsUndefined() = false";
-			}
 
-			res.Kinds = v8_Value_KindsFromLocal(resultChecked);
-			res.Value = static_cast<PersistentValuePtr>(new Value(isolate, resultChecked));
+				/*
+				if (resultChecked->IsUndefined()) {
+					std::cout << "resultChecked->IsUndefined() = true";
+				}
+				else {
+					std::cout << "resultChecked->IsUndefined() = false";
+				}
+				*/
+
+				res.Kinds = v8_Value_KindsFromLocal(resultChecked);
+				res.Value = static_cast<PersistentValuePtr>(new Value(isolate, resultChecked));
+
+			}
 
 		}
 

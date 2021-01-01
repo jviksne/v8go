@@ -176,7 +176,7 @@ func ExampleSnapshot() {
         };
         // Run some functions:
         myGlobalState.init();
-    `)
+    `, true, nil)
 	iso := v8.NewIsolateWithSnapshot(snapshot)
 
 	// Create a context with the state from the snapshot:
