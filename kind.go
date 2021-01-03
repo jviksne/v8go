@@ -11,7 +11,7 @@ import (
 type Kind uint8
 
 const (
-	KindUndefined Kind = iota + 1 // the Kind should not be 0 because (v *Value) IsKind(k Kind) will return false for 0
+	KindUndefined Kind = iota
 	KindNull
 	KindName
 	KindString
@@ -127,7 +127,7 @@ type kindMask uint64
 const compileCheckThatNumKindsBitsFitInKindType = kindMask(1 << kNumKinds)
 
 func (mask kindMask) Is(k Kind) bool {
-	return (mask & k.mask()) != 0
+	return (mask&k.mask()) != 0 || (k == 0 && mask == 0) // JV added "|| (k == 0 && mask == 0)" for undefined to work
 }
 
 func (mask kindMask) String() string {
