@@ -11,7 +11,7 @@ import (
 type Kind uint8
 
 const (
-	KindUndefined Kind = iota
+	KindUndefined Kind = iota + 1 // the Kind should not be 0 because (v *Value) IsKind(k Kind) will return false for 0
 	KindNull
 	KindName
 	KindString
