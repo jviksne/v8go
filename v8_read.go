@@ -122,6 +122,9 @@ func readInto(dst interface{}, value *Value, path []string, maxDepth int) (err e
 			}
 		}
 
+		//JV added, panel.is bugfix
+		dstValue.Set(newSlice)
+
 	case reflect.String:
 		dstValue.Set(reflect.ValueOf(value.String()))
 
