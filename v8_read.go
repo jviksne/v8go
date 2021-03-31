@@ -106,7 +106,7 @@ func readInto(dst interface{}, value *Value, ctx *Context, path []string, maxDep
 			if err != nil {
 				return err
 			}
-			dstValue.SetMapIndex(reflect.ValueOf(objKeys[i]), entryVal.Elem())
+			newMap.SetMapIndex(reflect.ValueOf(objKeys[i]), entryVal.Elem())
 		}
 
 		dstValue.Set(newMap)
