@@ -10,12 +10,12 @@ import (
 // ReadInto reads a v8 Value into a Go variable passed by reference,
 // and returns nil upon success and an error in case type cast is
 // not possible returns.
-func ReadInto(varPtr interface{}, value *Value, maxDepth int) error {
+func ReadInto(varPtr interface{}, value *Value, ctx *Context, maxDepth int) error {
 	path := make([]string, 0, maxDepth)
-	return readInto(varPtr, value, path, maxDepth)
+	return readInto(varPtr, value, ctx, path, maxDepth)
 }
 
-func readInto(dst interface{}, value *Value, path []string, maxDepth int) (err error) {
+func readInto(dst interface{}, value *Value, ctx *Context, path []string, maxDepth int) (err error) {
 
 	if len(path) > maxDepth {
 		return fmt.Errorf("max depth of %d exceeded", maxDepth)
@@ -88,6 +88,30 @@ func readInto(dst interface{}, value *Value, path []string, maxDepth int) (err e
 		if !value.IsKind(KindObject) {
 			return getReadIntoError("value to be read into a map is not an object", path)
 		}
+		if dstType.Key().Kind() != reflect.String {
+			return getReadIntoError("only string type keys are supported for maps", path)
+		}
+		objKeys, err := GetObjKeys(value, ctx, maxDepth)
+		if err != nil {
+			return err
+		}
+		newMap := reflect.MakeMapWithSize(reflect.SliceOf(dstType.Elem()), len(objKeys))
+		for i := 0; i < len(objKeys); i++ {
+			objVal, err := value.Get(objKeys[i])
+			if err != nil {
+				return err
+			}
+			entryVal := reflect.New(dstType.Elem())
+			err = readInto(entryVal.Interface(), objVal, ctx, append(path, objKeys[i]), maxDepth)
+			if err != nil {
+				return err
+			}
+			dstValue.SetMapIndex(reflect.ValueOf(objKeys[i]), entryVal)
+		}
+
+		dstValue.Set(newMap)
+
+		/* original solution:
 		for _, mapKey := range dstValue.MapKeys() {
 			objVal, err := value.Get(mapKey.String())
 			if err != nil {
@@ -98,6 +122,7 @@ func readInto(dst interface{}, value *Value, path []string, maxDepth int) (err e
 				return err
 			}
 		}
+		*/
 	case reflect.Ptr:
 		return getReadIntoError("pointer not supported", path)
 	case reflect.Slice:
@@ -116,7 +141,7 @@ func readInto(dst interface{}, value *Value, path []string, maxDepth int) (err e
 		newSlice := reflect.MakeSlice(reflect.SliceOf(dstType.Elem()), length, length)
 		for i := 0; i < length; i++ {
 			arrVal, err := value.GetIndex(i)
-			err = readInto(newSlice.Index(i).Addr().Interface(), arrVal, append(path, string(i)), maxDepth)
+			err = readInto(newSlice.Index(i).Addr().Interface(), arrVal, ctx, append(path, string(i)), maxDepth)
 			if err != nil {
 				return err
 			}
@@ -138,6 +163,13 @@ func readInto(dst interface{}, value *Value, path []string, maxDepth int) (err e
 
 			field := dstType.Field(i)
 
+			if field.Anonymous { // embedded structure
+				if err = readInto(dstValue.Field(i).Addr().Interface(), value, ctx, path, maxDepth); err != nil {
+					return err
+				}
+				continue
+			}
+
 			jsonFieldName := field.Tag.Get("json")
 
 			jsonOptIndex := strings.Index(jsonFieldName, ",")
@@ -154,7 +186,7 @@ func readInto(dst interface{}, value *Value, path []string, maxDepth int) (err e
 				return err
 			}
 
-			err = readInto(dstValue.Field(i).Addr().Interface(), objVal, append(path, field.Name), maxDepth)
+			err = readInto(dstValue.Field(i).Addr().Interface(), objVal, ctx, append(path, field.Name), maxDepth)
 			if err != nil {
 				return err
 			}
@@ -173,4 +205,34 @@ func getReadIntoError(msg string, path []string) error {
 		return errors.New(msg)
 	}
 	return fmt.Errorf("error reading value into %s: %s", strings.Join(path, "."), msg)
+}
+
+// GetObjKeys calls Object.keys() on the object and returns
+// the keys as Go slice
+func GetObjKeys(value *Value, ctx *Context, maxDepth int) ([]string, error) {
+
+	if value == nil {
+		return nil, nil
+	}
+
+	obj, err := ctx.Global().Get("Object")
+	if err != nil {
+		return nil, err
+	}
+
+	keysFn, err := obj.Get("keys")
+	if err != nil {
+		return nil, err
+	}
+
+	keysVal, err := keysFn.Call(ctx.Global(), value)
+	if err != nil {
+		return nil, err
+	}
+
+	var keys []string
+	err = ReadInto(&keys, keysVal, ctx, maxDepth)
+
+	return keys, err
+
 }
