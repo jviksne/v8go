@@ -95,7 +95,7 @@ func readInto(dst interface{}, value *Value, ctx *Context, path []string, maxDep
 		if err != nil {
 			return err
 		}
-		newMap := reflect.MakeMapWithSize(reflect.SliceOf(dstType.Elem()), len(objKeys))
+		newMap := reflect.MakeMapWithSize(reflect.MapOf(dstType.Key(), dstType.Elem()), len(objKeys))
 		for i := 0; i < len(objKeys); i++ {
 			objVal, err := value.Get(objKeys[i])
 			if err != nil {
