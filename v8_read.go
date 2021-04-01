@@ -59,8 +59,9 @@ func readInto(dst interface{}, value *Value, path []string, maxDepth int) (err e
 	// If type is an Unmarshaller (such as json.RawMessage)
 	// then call it's Unmarshal function to decode it.
 	// Based on indirect() from go/src/encoding/json/decode.go.
-	if dstType.NumMethod() > 0 && dstValue.CanInterface() {
-		if u, ok := dstValue.Interface().(json.Unmarshaler); ok {
+	if dstValue.CanAddr() && // UnmarshalJSON is defined on pointer of the type
+		dstValue.Addr().Type().NumMethod() > 0 && dstValue.Addr().CanInterface() {
+		if u, ok := dstValue.Addr().Interface().(json.Unmarshaler); ok {
 			b, err := value.MarshalJSON()
 			if err != nil {
 				return err
