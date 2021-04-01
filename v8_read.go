@@ -1,6 +1,7 @@
 package v8
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
@@ -40,6 +41,22 @@ func readInto(dst interface{}, value *Value, ctx *Context, path []string, maxDep
 	if value.IsKind(KindUndefined) || value.IsKind(KindNull) {
 		dstValue.Set(reflect.Zero(dstType))
 		return nil
+	}
+
+	// If type is an Unmarshaller (such as json.RawMessage)
+	// then call it's Unmarshal function to decode it.
+	// Based on indirect() from go/src/encoding/json/decode.go.
+	if dstType.NumMethod() > 0 && dstValue.CanInterface() {
+		if u, ok := dstValue.Interface().(json.Unmarshaler); ok {
+			b, err := value.MarshalJSON()
+			if err != nil {
+				return err
+			}
+			if err = u.UnmarshalJSON(b); err != nil {
+				return err
+			}
+			return nil
+		}
 	}
 
 	switch dstType.Kind() {
@@ -146,8 +163,6 @@ func readInto(dst interface{}, value *Value, ctx *Context, path []string, maxDep
 				return err
 			}
 		}
-
-		//JV added, panel.is bugfix
 		dstValue.Set(newSlice)
 
 	case reflect.String:
