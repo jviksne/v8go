@@ -512,6 +512,36 @@ func (v *Value) New(args ...*Value) (*Value, error) {
 	return v.ctx.split(result)
 }
 
+// GetObjKeys calls Object.keys() on the object and returns
+// the keys as a Go slice
+func (value *Value) GetObjKeys() ([]string, error) {
+
+	if value == nil {
+		return nil, nil
+	}
+
+	obj, err := value.ctx.Global().Get("Object")
+	if err != nil {
+		return nil, err
+	}
+
+	keysFn, err := obj.Get("keys")
+	if err != nil {
+		return nil, err
+	}
+
+	keysVal, err := keysFn.Call(value.ctx.Global(), value)
+	if err != nil {
+		return nil, err
+	}
+
+	var keys []string
+	err = ReadInto(&keys, keysVal, 1)
+
+	return keys, err
+
+}
+
 func (v *Value) release() {
 	if v.ptr != nil {
 		C.v8_Value_Release(v.ctx.ptr, v.ptr)
