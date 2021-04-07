@@ -172,7 +172,7 @@ func readInto(dst interface{}, value *Value, path []string, maxDepth int) (err e
 		newSlice := reflect.MakeSlice(reflect.SliceOf(dstType.Elem()), length, length)
 		for i := 0; i < length; i++ {
 			arrVal, err := value.GetIndex(i)
-			err = readInto(newSlice.Index(i).Addr().Interface(), arrVal, append(path, string(i)), maxDepth)
+			err = readInto(newSlice.Index(i).Addr().Interface(), arrVal, append(path, fmt.Sprint(i)), maxDepth)
 			if err != nil {
 				return err
 			}
@@ -180,7 +180,7 @@ func readInto(dst interface{}, value *Value, path []string, maxDepth int) (err e
 		dstValue.Set(newSlice)
 
 	case reflect.String:
-		dstValue.Set(reflect.ValueOf(value.String()))
+		dstValue.Set(reflect.ValueOf(value.String()).Convert(dstType)) // Convert to possible custom string type
 
 	case reflect.Struct:
 		if !value.IsKind(KindObject) {
