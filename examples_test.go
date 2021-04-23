@@ -2,14 +2,19 @@ package v8_test
 
 import (
 	"fmt"
+	"log"
 
 	v8 "github.com/jviksne/v8go"
 )
 
 func Example() {
+	v8.Init("")
 	// Easy-peasy to create a new VM:
-	ctx := v8.NewIsolate().NewContext()
-
+	isol, err := v8.NewIsolate()
+	if err != nil {
+		log.Fatal(err)
+	}
+	ctx := isol.NewContext()
 	// You can load your js from a file, create it dynamically, whatever.
 	ctx.Eval(`
             // This is javascript code!
@@ -39,7 +44,7 @@ func Example() {
 
 	fmt.Println("product(1,2,3,4,5) =", res.Int64())
 
-	_, err := ctx.Eval(`
+	_, err = ctx.Eval(`
             // Sometimes there's a mistake in your js code:
             functin broken(a,b) { return a+b; }
         `, "ooops.js")
@@ -58,8 +63,12 @@ func Example() {
 func Example_microtasks() {
 	// Microtasks are automatically run when the Eval'd js code has finished but
 	// before Eval returns.
-
-	ctx := v8.NewIsolate().NewContext()
+	v8.Init("")
+	isol, err := v8.NewIsolate()
+	if err != nil {
+		log.Fatal(err)
+	}
+	ctx := isol.NewContext()
 
 	// Register a simple log function in js.
 	ctx.Global().Set("log", ctx.Bind("log", func(in v8.CallbackArgs) (*v8.Value, error) {
@@ -94,7 +103,12 @@ func Example_microtasks() {
 }
 
 func ExampleContext_Create_basic() {
-	ctx := v8.NewIsolate().NewContext()
+	v8.Init("")
+	isol, err := v8.NewIsolate()
+	if err != nil {
+		log.Fatal(err)
+	}
+	ctx := isol.NewContext()
 
 	type Info struct{ Name, Email string }
 
@@ -122,7 +136,12 @@ func ExampleContext_Create_basic() {
 }
 
 func ExampleContext_Create_callbacks() {
-	ctx := v8.NewIsolate().NewContext()
+	v8.Init("")
+	isol, err := v8.NewIsolate()
+	if err != nil {
+		log.Fatal(err)
+	}
+	ctx := isol.NewContext()
 
 	// A typical use of Create is to return values from callbacks:
 	var nextId int
@@ -166,7 +185,8 @@ func ExampleContext_Create_callbacks() {
 }
 
 func ExampleSnapshot() {
-	snapshot := v8.CreateSnapshot(`
+	v8.Init("")
+	snapshot, err := v8.CreateSnapshot(`
         // Concantenate all the scripts you want at startup, e.g. lodash, etc.
         _ = { map: function() { /* ... */ }, etc: "etc, etc..." };
         // Setup my per-context global state:
@@ -177,7 +197,13 @@ func ExampleSnapshot() {
         // Run some functions:
         myGlobalState.init();
     `, true, nil)
-	iso := v8.NewIsolateWithSnapshot(snapshot)
+	if err != nil {
+		log.Fatal(err)
+	}
+	iso, err := v8.NewIsolateWithSnapshot(snapshot)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Create a context with the state from the snapshot:
 	ctx1 := iso.NewContext()

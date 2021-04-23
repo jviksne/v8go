@@ -2,6 +2,7 @@ package v8_test
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 
 	v8 "github.com/jviksne/v8go"
@@ -26,7 +27,12 @@ func AddAllNumbers(in v8.CallbackArgs) (*v8.Value, error) {
 }
 
 func ExampleContext_Bind() {
-	ctx := v8.NewIsolate().NewContext()
+	v8.Init("")
+	isol, err := v8.NewIsolate()
+	if err != nil {
+		log.Fatal(err)
+	}
+	ctx := isol.NewContext()
 
 	// First, we'll bind our callback function into a *v8.Value that we can
 	// use as we please. The string "my_add_function" here is the used by V8 as

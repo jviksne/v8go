@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 
 	v8 "github.com/jviksne/v8go"
@@ -33,7 +34,12 @@ const (
 
 func main() {
 	flag.Parse()
-	ctx := v8.NewIsolate().NewContext()
+	v8.Init("")
+	isol, err := v8.NewIsolate()
+	if err != nil {
+		log.Fatal(err)
+	}
+	ctx := isol.NewContext()
 	v8console.Config{"", os.Stdout, os.Stderr, true}.Inject(ctx)
 
 	for _, filename := range flag.Args() {

@@ -2,6 +2,7 @@ package v8console_test
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	v8 "github.com/jviksne/v8go"
@@ -9,6 +10,7 @@ import (
 )
 
 func ExampleFlushSnapshotAndInject() {
+	v8.Init("")
 	const myJsCode = `
         // Typically this will be an auto-generated js bundle file.
         function require() {} // fake stub
@@ -17,13 +19,20 @@ func ExampleFlushSnapshotAndInject() {
         function renderPage(name) { return "<html><body>Hi " + name + "!"; }
         console.warn('snapshot initialization');
     `
-	snapshot := v8.CreateSnapshot(v8console.WrapForSnapshot(myJsCode))
-	ctx := v8.NewIsolateWithSnapshot(snapshot).NewContext()
+	snapshot, err := v8.CreateSnapshot(v8console.WrapForSnapshot(myJsCode), true, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	isol, err := v8.NewIsolateWithSnapshot(snapshot)
+	if err != nil {
+		log.Fatal(err)
+	}
+	ctx := isol.NewContext()
 	console := v8console.Config{"console> ", os.Stdout, os.Stdout, false}
 	if exception := v8console.FlushSnapshotAndInject(ctx, console); exception != nil {
 		panic(fmt.Errorf("Panic during snapshot creation: %v", exception.String()))
 	}
-	_, err := ctx.Eval(`console.warn('after snapshot');`, `somefile.js`)
+	_, err = ctx.Eval(`console.warn('after snapshot');`, `somefile.js`)
 	if err != nil {
 		panic(err)
 	}
@@ -34,7 +43,12 @@ func ExampleFlushSnapshotAndInject() {
 }
 
 func ExampleConfig() {
-	ctx := v8.NewIsolate().NewContext()
+	v8.Init("")
+	isol, err := v8.NewIsolate()
+	if err != nil {
+		log.Fatal(err)
+	}
+	ctx := isol.NewContext()
 	v8console.Config{"> ", os.Stdout, os.Stdout, false}.Inject(ctx)
 	ctx.Eval(`
         console.log('hi there');

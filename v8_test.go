@@ -17,6 +17,7 @@ import (
 
 func TestRunSimpleJS(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -38,6 +39,7 @@ func TestRunSimpleJS(t *testing.T) {
 
 func TestBoolConversion(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -85,6 +87,7 @@ func TestBoolConversion(t *testing.T) {
 
 func TestJsRegex(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -105,6 +108,7 @@ func TestJsRegex(t *testing.T) {
 
 func TestNumberConversions(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -134,6 +138,7 @@ func TestNumberConversions(t *testing.T) {
 
 func TestNumberConversionsFailForNonNumbers(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -160,6 +165,7 @@ func TestNumberConversionsFailForNonNumbers(t *testing.T) {
 
 func TestErrorRunningInvalidJs(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -174,6 +180,7 @@ func TestErrorRunningInvalidJs(t *testing.T) {
 
 func TestValueString(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -212,6 +219,7 @@ func TestValueString(t *testing.T) {
 
 func TestJsReturnStringWithEmbeddedNulls(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -228,6 +236,7 @@ func TestJsReturnStringWithEmbeddedNulls(t *testing.T) {
 
 func TestJsReturnUndefined(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -247,6 +256,7 @@ func TestJsReturnUndefined(t *testing.T) {
 
 func TestJsReturnArrayBuffer(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -267,6 +277,7 @@ func TestJsReturnArrayBuffer(t *testing.T) {
 
 func TestJsThrowString(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -284,6 +295,7 @@ func TestJsThrowString(t *testing.T) {
 
 func TestJsThrowError(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -301,6 +313,7 @@ func TestJsThrowError(t *testing.T) {
 
 func TestReadFieldFromObject(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -321,6 +334,8 @@ func TestReadFieldFromObject(t *testing.T) {
 
 func TestReadAndWriteIndexFromArrayBuffer(t *testing.T) {
 	t.Parallel()
+
+	Init("")
 
 	iso, err := NewIsolate()
 	if err != nil {
@@ -399,6 +414,7 @@ func TestReadAndWriteIndexFromArrayBuffer(t *testing.T) {
 
 func TestReadAndWriteIndexFromArray(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -434,6 +450,7 @@ func TestReadAndWriteIndexFromArray(t *testing.T) {
 
 func TestReadFieldFromNonObjectFails(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -455,6 +472,7 @@ func TestReadFieldFromNonObjectFails(t *testing.T) {
 
 func TestReadFieldFromGlobal(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -475,6 +493,7 @@ func TestReadFieldFromGlobal(t *testing.T) {
 
 func TestSetField(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -501,6 +520,7 @@ func TestSetField(t *testing.T) {
 
 func TestRunningCodeInContextAfterThrowingError(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -532,6 +552,7 @@ func TestRunningCodeInContextAfterThrowingError(t *testing.T) {
 func TestManyContextsThrowingErrors(t *testing.T) {
 	t.Parallel()
 
+	Init("")
 	prog := `
 		function work(N, depth, fail) {
 			if (depth == 0) { return 1; }
@@ -571,6 +592,7 @@ func TestManyContextsThrowingErrors(t *testing.T) {
 
 func TestErrorsInNativeCode(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -585,6 +607,7 @@ func TestErrorsInNativeCode(t *testing.T) {
 
 func TestCallFunctionWithExplicitThis(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -604,6 +627,7 @@ func TestCallFunctionWithExplicitThis(t *testing.T) {
 
 func TestCallFunctionWithGlobalScope(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -623,6 +647,7 @@ func TestCallFunctionWithGlobalScope(t *testing.T) {
 
 func TestCallFunctionFailsOnNonFunction(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -639,6 +664,7 @@ func TestCallFunctionFailsOnNonFunction(t *testing.T) {
 
 func TestNewFunction(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -659,6 +685,7 @@ func TestNewFunction(t *testing.T) {
 
 func TestNewFunctionThrows(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -675,6 +702,7 @@ func TestNewFunctionThrows(t *testing.T) {
 
 func TestNewFunctionWithArgs(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -697,6 +725,7 @@ func TestNewFunctionWithArgs(t *testing.T) {
 
 func TestNewFunctionFailsOnNonFunction(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -713,6 +742,7 @@ func TestNewFunctionFailsOnNonFunction(t *testing.T) {
 
 func TestBind(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -758,6 +788,7 @@ func TestBind(t *testing.T) {
 
 func TestBindReturnsError(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -777,6 +808,7 @@ func TestBindReturnsError(t *testing.T) {
 
 func TestBindPanics(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -795,6 +827,7 @@ func TestBindPanics(t *testing.T) {
 
 func TestBindName(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -827,6 +860,7 @@ func TestBindNilReturn(t *testing.T) {
 
 func TestTerminate(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -870,6 +904,7 @@ func TestTerminate(t *testing.T) {
 
 func TestSnapshot(t *testing.T) {
 	t.Parallel()
+	Init("")
 	snapshot, err := CreateSnapshot("zzz='hi there!';", true, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -892,6 +927,7 @@ func TestSnapshot(t *testing.T) {
 
 func TestSnapshotBadJs(t *testing.T) {
 	t.Parallel()
+	Init("")
 	snapshot, err := CreateSnapshot("This isn't yo mama's snapshot!", true, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -914,6 +950,7 @@ func TestSnapshotBadJs(t *testing.T) {
 }
 
 func TestEs6Destructuring(t *testing.T) {
+	Init("")
 	if Version.Major < 5 {
 		t.Skip("V8 versions before 5.* don't support destructuring.")
 	}
@@ -940,6 +977,7 @@ func TestEs6Destructuring(t *testing.T) {
 
 func TestJsonExport(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -970,6 +1008,7 @@ func TestJsonExport(t *testing.T) {
 
 func TestValueReleaseMoreThanOnceIsOk(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -995,6 +1034,7 @@ func TestValueReleaseMoreThanOnceIsOk(t *testing.T) {
 
 func TestSharingValuesAmongContextsInAnIsolate(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	ctx1, ctx2 := iso.NewContext(), iso.NewContext()
 
@@ -1036,6 +1076,7 @@ func TestSharingValuesAmongContextsInAnIsolate(t *testing.T) {
 
 func TestCreateSimple(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -1081,6 +1122,7 @@ func TestCreateSimple(t *testing.T) {
 
 func TestCreateComplex(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -1175,6 +1217,7 @@ func TestCreateComplex(t *testing.T) {
 
 func TestJsCreateArrayBufferRoundtrip(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -1241,6 +1284,7 @@ func TestJsCreateArrayBufferRoundtrip(t *testing.T) {
 
 func TestTypedArrayBuffers(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -1298,6 +1342,7 @@ func TestCreateJsonTags(t *testing.T) {
 
 func TestParseJson(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -1350,6 +1395,7 @@ func TestJsonMarshal(t *testing.T) {
 func TestCallbackProvideCorrectContext(t *testing.T) {
 	t.Parallel()
 
+	Init("")
 	// greet is a generate callback handler that is not associated with a
 	// particular context -- it uses the provided context to create a value
 	// to return, even when used from different isolates.
@@ -1388,6 +1434,7 @@ func TestCallbackProvideCorrectContext(t *testing.T) {
 func TestCircularReferenceJsonMarshalling(t *testing.T) {
 	t.Parallel()
 
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -1448,6 +1495,7 @@ func TestIsolateFinalizer(t *testing.T) {
 
 func TestContextFinalizer(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -1470,6 +1518,7 @@ func TestContextFinalizer(t *testing.T) {
 
 func TestContextFinalizerWithValues(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -1501,6 +1550,7 @@ func TestContextFinalizerWithValues(t *testing.T) {
 }
 
 func TestIsolateGetHeapStatistics(t *testing.T) {
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -1553,6 +1603,7 @@ func runGcUntilReceivedOrTimedOut(signal <-chan bool, timeout time.Duration) boo
 // This is bad, and should be fixed! See https://github.com/augustoroman/v8/issues/21
 func TestMicrotasksIgnoreUnhandledPromiseRejection(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -1594,6 +1645,7 @@ func TestMicrotasksIgnoreUnhandledPromiseRejection(t *testing.T) {
 
 func TestValueKind(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -1673,6 +1725,7 @@ func TestValueKind(t *testing.T) {
 
 func TestDate(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -1694,6 +1747,7 @@ func TestDate(t *testing.T) {
 
 func TestPromise(t *testing.T) {
 	t.Parallel()
+	Init("")
 	iso, err := NewIsolate()
 	if err != nil {
 		t.Fatal(err)
@@ -1774,6 +1828,7 @@ func TestPanicHandling(t *testing.T) {
 		}
 	}()
 
+	Init("")
 	var f *big.Float
 	_, err := NewIsolate()
 	if err != nil {
