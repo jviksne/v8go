@@ -157,8 +157,7 @@ func RestoreSnapshotFromExport(data []byte) *Snapshot {
 // Because Snapshots cannot have refences to external code (no Go callbacks),
 // all of the initialization code must be pure JS and supplied at once as the
 // arg to this function.
-// isol can be null.
-func CreateSnapshot(js string, includeCompiledFnCode bool, iso *Isolate) (*Snapshot, error) {
+func CreateSnapshot(js string, includeCompiledFnCode bool, startupData *Snapshot) (*Snapshot, error) {
 	//v8InitOnce.Do(func() { v8Init() })
 	if !IsInit() {
 		return nil, fmt.Errorf("V8 not init")
@@ -167,18 +166,21 @@ func CreateSnapshot(js string, includeCompiledFnCode bool, iso *Isolate) (*Snaps
 	jsPtr := C.CString(js)
 	defer C.free(unsafe.Pointer(jsPtr))
 
+	/*startupData.data
+
 	var isoPtr C.IsolatePtr
 
 	if iso != nil {
 		isoPtr = iso.ptr
 	}
+	*/
 
 	includeCompiledFnCodeInt := 0
 	if includeCompiledFnCode {
 		includeCompiledFnCodeInt = 1
 	}
 
-	return newSnapshot(C.v8_CreateSnapshotDataBlob(jsPtr, C.int(includeCompiledFnCodeInt), isoPtr)), nil
+	return newSnapshot(C.v8_CreateSnapshotDataBlob(jsPtr, C.int(includeCompiledFnCodeInt), &startupData.data)), nil
 }
 
 // Isolate represents a single-threaded V8 engine instance.  It can run multiple

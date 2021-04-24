@@ -301,26 +301,46 @@ extern "C" {
 		free(ptr);
 	}
 
-	V8CBRIDGE_API StartupData v8_CreateSnapshotDataBlob(const char* js, int includeCompiledFnCode, IsolatePtr isolate_ptr) {
+	// If startup_data is null then snapshot will be loaded from resources.
+	V8CBRIDGE_API extern StartupData v8_CreateSnapshotDataBlob(const char* js, int include_compiled_fn_code, StartupData* startup_data) {
 
 		//Based on v8-8.0.426\v8\src\snapshot\snapshot-common.cc CreateSnapshotDataBlobInternal
-		
+
+		v8::StartupData* existing_blob;
+
+		// if snapshot passed use that
+		if (startup_data != nullptr) {
+			//log_warning("Snapshot passed via arguments");
+			//std::cout << data;
+			existing_blob = new v8::StartupData;
+			existing_blob->data = startup_data->ptr;
+			existing_blob->raw_size = startup_data->len;
+		}
+		else {
+			// load snapshot from resources
+			existing_blob = GetSnapshotFromRes();
+		}
+
 		// If no isolate is passed in, create it (and a new context) from scratch.
-		if (isolate_ptr == nullptr) isolate_ptr = v8::Isolate::Allocate();
+		v8::Isolate* isolate = isolate = v8::Isolate::Allocate();		
+
+		//TODO: important - what are these and are these needed?
+		v8::Locker locker(isolate);                            /* Lock to current thread.        */ \
+		v8::Isolate::Scope isolate_scope(isolate);             /* Assign isolate to this thread. */
 
 		// Optionally run a script to embed, and serialize to create a snapshot blob.
-		v8::SnapshotCreator snapshot_creator(static_cast<v8::Isolate*>(isolate_ptr));
+		v8::SnapshotCreator snapshot_creator(isolate, nullptr, existing_blob);
 		{
-			v8::HandleScope scope(static_cast<v8::Isolate*>(isolate_ptr));
-			v8::Local<v8::Context> context = v8::Context::New(static_cast<v8::Isolate*>(isolate_ptr));
+			v8::HandleScope scope(isolate);
+			v8::Local<v8::Context> context = v8::Context::New(isolate);
 			if (js != nullptr &&
-				!RunExtraCode(static_cast<v8::Isolate*>(isolate_ptr), context, js, "<embedded>")) {
+				!RunExtraCode(isolate, context, js, "<embedded>")) {
 				return {};
 			}
 			snapshot_creator.SetDefaultContext(context);
 		}
 
-		v8::StartupData data = snapshot_creator.CreateBlob(includeCompiledFnCode ? v8::SnapshotCreator::FunctionCodeHandling::kKeep : v8::SnapshotCreator::FunctionCodeHandling::kClear);
+		v8::StartupData data = snapshot_creator.CreateBlob(include_compiled_fn_code ? v8::SnapshotCreator::FunctionCodeHandling::kKeep : v8::SnapshotCreator::FunctionCodeHandling::kClear);
 
 		return StartupData{ data.data, data.raw_size };
 	}
