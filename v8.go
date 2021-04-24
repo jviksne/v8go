@@ -180,7 +180,12 @@ func CreateSnapshot(js string, includeCompiledFnCode bool, startupData *Snapshot
 		includeCompiledFnCodeInt = 1
 	}
 
-	return newSnapshot(C.v8_CreateSnapshotDataBlob(jsPtr, C.int(includeCompiledFnCodeInt), &startupData.data)), nil
+	if startupData != nil {
+		return newSnapshot(C.v8_CreateSnapshotDataBlob(jsPtr, C.int(includeCompiledFnCodeInt), &startupData.data)), nil
+	}
+
+	return newSnapshot(C.v8_CreateSnapshotDataBlob(jsPtr, C.int(includeCompiledFnCodeInt), nil)), nil
+
 }
 
 // Isolate represents a single-threaded V8 engine instance.  It can run multiple
